@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Square Detective — Рейтинг</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fredoka:wght@500;700&family=Russo+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="page page--centered">
+  <div class="card card--wide">
+    <header class="card__header">
+      <h1>Таблица рейтинга</h1>
+      <p class="muted">Топ-10 лучших результатов.</p>
+    </header>
+    <main class="card__body">
+      <table class="table" id="scores-table">
+        <thead>
+          <tr>
+            <th>Место</th>
+            <th>Имя</th>
+            <th>Очки</th>
+            <th>Сложность</th>
+            <th>Уровень игры</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <div class="actions-row">
+        <a class="btn btn--ghost" href="../index.html">В меню</a>
+        <button id="clear-btn" class="btn">Очистить таблицу</button>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="../scripts/scores.js"></script>
+</body>
+</html>
+

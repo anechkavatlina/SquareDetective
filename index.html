@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Square Detective — Старт</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Fredoka:wght@500;700&family=Russo+One&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page page--centered">
+  <div class="start-page">
+    <h1 class="start-title">Распознавание квадратов</h1>
+    <div class="card card--wide">
+      <div class="rule-box">
+        <span class="rule-label">Правило</span>
+        <p class="rule-text">Найди квадрат, совпадающий с образцом даже после поворотов.</p>
+      </div>
+      <main class="card__body">
+      <form id="start-form" class="form">
+        <label class="form__label">
+          Имя игрока
+          <input id="player-name" class="input" type="text" required minlength="2" maxlength="20" placeholder="Например, Алекс">
+        </label>
+        <label class="form__label">
+          Уровень сложности
+          <select id="level-select" class="input">
+            <option value="1">Легкий</option>
+            <option value="2">Средний</option>
+            <option value="3">Сложный</option>
+          </select>
+        </label>
+        <button id="start-btn" class="btn btn--primary" type="submit" disabled>Начать игру</button>
+      </form>
+      <div class="links-row">
+        <a class="link" href="pages/scores.html">Таблица рейтинга</a>
+      </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    const form = document.getElementById('start-form');
+    const nameInput = document.getElementById('player-name');
+    const levelSelect = document.getElementById('level-select');
+    const startBtn = document.getElementById('start-btn');
+
+    const validate = () => {
+      startBtn.disabled = nameInput.value.trim().length < 2;
+    };
+
+    nameInput.addEventListener('input', validate);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const level = Number(levelSelect.value);
+      if (!name) return;
+      sessionStorage.setItem('squareDetectivePlayer', JSON.stringify({ name, level }));
+      window.location.href = 'pages/game.html';
+    });
+  </script>
+</body>
+</html>
+

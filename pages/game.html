@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Square Detective — Игра</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body class="page page--game">
+  <header class="topbar">
+    <div class="topbar__section">
+      <div class="pill"><span class="muted">Игрок:</span> <strong id="ui-player">—</strong></div>
+      <div class="pill"><span class="muted">Уровень:</span> <strong id="ui-level">—</strong></div>
+    </div>
+    <div class="topbar__section">
+      <div class="pill"><span class="muted">Вопрос:</span> <strong id="ui-question">1</strong></div>
+      <div class="pill"><span class="muted">Счёт:</span> <strong id="ui-score">0</strong></div>
+    </div>
+    <div class="topbar__section topbar__section--timer">
+      <div class="pill"><span class="muted">Таймер:</span> <strong id="ui-timer">00:00</strong></div>
+      <div class="progress">
+        <div id="ui-progress" class="progress__bar"></div>
+      </div>
+    </div>
+    <div class="topbar__section">
+      <div class="badge" id="ui-mod">Без модификатора</div>
+    </div>
+  </header>
+
+  <main class="game-layout">
+    <aside class="panel panel--target">
+      <h2>Образец</h2>
+      <div id="target" class="grid grid--target"></div>
+      <div id="drag-target-container" class="drag-target-area hidden">
+        <div id="dropped-square-wrapper"></div>
+      </div>
+      <div class="rule-box rule-box--game">
+        <span class="rule-label">Правило</span>
+        <p id="rule-text" class="rule-text">Найди квадрат, совпадающий с образцом даже после поворотов</p>
+      </div>
+    </aside>
+    <section class="panel panel--board">
+      <div class="panel__head">
+        <h2>Игровое поле</h2>
+        <div id="ui-size" class="muted"></div>
+      </div>
+      <div id="game-board" class="board"></div>
+    </section>
+    <aside class="panel panel--controls">
+      <h2>Управление</h2>
+      <button id="hint-btn" class="btn btn--ghost">Подсказка (-10%)</button>
+      <button id="finish-btn" class="btn">Завершить уровень</button>
+      <div class="panel__footer">
+        <a class="link" href="../index.html">В меню</a>
+      </div>
+    </aside>
+  </main>
+
+  <div id="instruction-modal" class="modal">
+    <div class="modal__content">
+      <h3 id="instruction-title">Инструкция</h3>
+      <p id="instruction-text" class="muted"></p>
+      <div id="instruction-details" class="instruction-details"></div>
+      <button id="instruction-start" class="btn btn--primary">Начать уровень</button>
+    </div>
+  </div>
+
+  <div id="result-modal" class="modal hidden">
+    <div class="modal__content">
+      <h3 id="modal-title">Итоговый результат</h3>
+      <p id="modal-text" class="muted"></p>
+      <div class="modal__score">
+        <div><span class="muted">Итоговые очки:</span> <strong id="modal-total">0</strong></div>
+      </div>
+      <button id="modal-next" class="btn btn--primary">К таблице рейтинга</button>
+    </div>
+  </div>
+
+  <!-- Панель разработчика для быстрого перехода -->
+  <div class="dev-toggle" id="dev-toggle" title="Панель разработчика">⚙</div>
+  <div class="dev-panel" id="dev-panel">
+    <div style="font-weight: bold; margin-bottom: 4px;">Панель разработчика</div>
+    <button id="dev-level-1">Уровень игры 1</button>
+    <button id="dev-level-2">Уровень игры 2</button>
+    <button id="dev-level-3">Уровень игры 3</button>
+    <button id="dev-reset">Сбросить игру</button>
+  </div>
+
+  <script type="module" src="../scripts/game.js"></script>
+</body>
+</html>
+
