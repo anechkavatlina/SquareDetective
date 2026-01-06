@@ -73,7 +73,7 @@ function showInstruction({ gameLevel, name, description, task }) {
   const taskDetails = {
     click: 'Кликните по квадрату, который совпадает с образцом.',
     drag: 'Перетащите квадрат в контейнер под образцом. Используйте клавиши ← и → для поворота на 90°.',
-    delete: 'Двойным кликом удаляйте неправильные квадраты, пока не останется верный.'
+    delete: 'Двойным кликом удаляйте неправильные квадраты, пока не останется верный. Квадраты расположены рандомно, их можно перемещать по полю, используя мышку.'
   };
   
   instructionDetails.innerHTML = `
@@ -108,11 +108,51 @@ let draggedSquare = null;
 let droppedSquareRotation = 0;
 let droppedSquareIndex = null;
 
+function createParticle(x, y, type) {
+  const particle = document.createElement('particle');
+  document.body.appendChild(particle);
+  
+  let width = Math.floor(Math.random() * 30 + 8);
+  let height = width;
+  let destinationX = (Math.random() - 0.5) * 300;
+  let destinationY = (Math.random() - 0.5) * 300;
+  let rotation = Math.random() * 520;
+  let delay = Math.random() * 200;
+  
+  switch (type) {
+    case 'square':
+      particle.style.background = `hsl(${Math.random() * 60 + 260}, 70%, 60%)`;
+      particle.style.border = '1px solid white';
+      break;
+  }
+  
+  particle.style.width = `${width}px`;
+  particle.style.height = `${height}px`;
+  
+  const animation = particle.animate([
+    {
+      transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(0deg)`,
+      opacity: 1
+    },
+    {
+      transform: `translate(-50%, -50%) translate(${x + destinationX}px, ${y + destinationY}px) rotate(${rotation}deg)`,
+      opacity: 0
+    }
+  ], {
+    duration: Math.random() * 1000 + 5000,
+    easing: 'cubic-bezier(0, .9, .57, 1)',
+    delay: delay
+  });
+  
+  animation.onfinish = () => {
+    particle.remove();
+  };
+}
+
 function renderBoard({ squares, target, size, mod, task }) {
   cleanupModifier();
   hintBtn.disabled = false;
   
-  // Сброс состояния drag&drop
   draggedSquare = null;
   droppedSquareRotation = 0;
   droppedSquareIndex = null;
@@ -120,16 +160,13 @@ function renderBoard({ squares, target, size, mod, task }) {
 
   renderMatrix(targetEl, target);
 
-  // Показываем/скрываем контейнер для drag&drop в зависимости от задачи
   const dragContainer = document.getElementById('drag-target-container');
   const ruleText = document.getElementById('rule-text');
   
   if (task === 'drag') {
-    // Показываем контейнер только на уровне 2
     if (dragContainer) {
       dragContainer.classList.remove('hidden');
       dragContainer.style.display = 'flex';
-      // Переинициализируем обработчики drag&drop
       if (typeof initDragAndDrop === 'function') {
         initDragAndDrop();
       }
@@ -140,7 +177,6 @@ function renderBoard({ squares, target, size, mod, task }) {
     ensureCheckButton();
     if (checkBtn) checkBtn.style.display = 'block';
   } else {
-    // Скрываем контейнер на уровнях 1 и 3
     if (dragContainer) {
       dragContainer.classList.add('hidden');
       dragContainer.style.display = 'none';
@@ -157,52 +193,44 @@ function renderBoard({ squares, target, size, mod, task }) {
     }
   }
 
-  // Очищаем контейнер для перетащенного квадрата
   const droppedWrapper = document.getElementById('dropped-square-wrapper');
   droppedWrapper.innerHTML = '';
 
   boardEl.innerHTML = '';
   boardEl.className = 'board';
   
-  // Для вращения используем абсолютное позиционирование со случайными координатами
-  if (mod === 'rotate') {
+  if (mod === 'rotate' || task === 'delete') {
     boardEl.style.position = 'relative';
     boardEl.style.display = 'block';
     
-    // Получаем точные размеры для вычисления доступной высоты
     const panelBoard = boardEl.closest('.panel--board');
     const panelHead = panelBoard?.querySelector('.panel__head');
     
-    // Ждем рендеринга для получения точных размеров
     requestAnimationFrame(() => {
       const viewportHeight = window.innerHeight;
       const topbar = document.querySelector('.topbar');
-      const topbarHeight = topbar ? topbar.offsetHeight + 16 : 80; // высота topbar + отступы
-      const panelHeadHeight = panelHead ? panelHead.offsetHeight + 8 : 50; // высота заголовка + gap
-      const gameLayoutGap = 10; // gap между панелями
-      const pagePadding = 24; // padding страницы (12px * 2)
+      const topbarHeight = topbar ? topbar.offsetHeight + 16 : 80;
+      const panelHeadHeight = panelHead ? panelHead.offsetHeight + 8 : 50;
+      const gameLayoutGap = 10;
+      const pagePadding = 24;
       
-      // Вычисляем доступную высоту для игрового поля
       const availableHeight = viewportHeight - topbarHeight - panelHeadHeight - gameLayoutGap - pagePadding;
       
-      // Устанавливаем фиксированную высоту контейнера (не больше доступной)
-      const squareSize = 160;
+      const squareSize = task === 'delete' ? 140 : 160;
       const padding = 15;
-      const containerHeight = Math.max(400, Math.min(availableHeight - 20, 600)); // Минимум 400px, максимум 600px или доступная высота
+      const containerHeight = Math.max(400, Math.min(availableHeight - 20, 600));
       
       boardEl.style.height = `${containerHeight}px`;
       boardEl.style.minHeight = `${containerHeight}px`;
       boardEl.style.maxHeight = `${containerHeight}px`;
       boardEl.style.width = '100%';
-      boardEl.style.overflow = 'hidden'; // Скрываем содержимое за границами
+      boardEl.style.overflow = 'hidden';
       
-      // Добавляем визуальные границы для обозначения области
       boardEl.style.border = '2px solid rgba(123, 109, 255, 0.5)';
       boardEl.style.borderRadius = '8px';
       boardEl.style.backgroundColor = 'rgba(249, 250, 251, 0.3)';
     });
   } else {
-    // Убираем границы для других режимов
     boardEl.style.border = '';
     boardEl.style.borderRadius = '';
     boardEl.style.backgroundColor = '';
@@ -216,7 +244,6 @@ function renderBoard({ squares, target, size, mod, task }) {
   
   currentSquares = [];
   
-  // Сбрасываем инициализацию ячеек при новом рендеринге
   if (boardEl.dataset.cellsInitialized) {
     delete boardEl.dataset.cellsInitialized;
     delete boardEl.dataset.availableCells;
@@ -227,30 +254,23 @@ function renderBoard({ squares, target, size, mod, task }) {
     const btn = document.createElement('button');
     btn.className = 'square';
     btn.dataset.index = idx;
-    btn.dataset.matrix = JSON.stringify(matrix); // Сохраняем матрицу для drag&drop
+    btn.dataset.matrix = JSON.stringify(matrix);
     
-    // Для вращения устанавливаем абсолютное позиционирование со случайными координатами
-    if (mod === 'rotate') {
+    if (mod === 'rotate' && task !== 'delete') {
       btn.style.position = 'absolute';
-      // Увеличенный размер квадрата для вращения
       const squareSize = 160;
       btn.style.width = `${squareSize}px`;
       btn.style.height = `${squareSize}px`;
       
-      // Используем setTimeout для получения размеров после рендеринга
       setTimeout(() => {
-        // Получаем реальные размеры контейнера
         const boardWidth = boardEl.clientWidth || boardEl.offsetWidth || 800;
         const boardHeight = boardEl.clientHeight || boardEl.offsetHeight || 600;
         
-        // Учитываем padding контейнера (8px с каждой стороны)
         const containerPadding = 8;
         const usableWidth = boardWidth - containerPadding * 2;
         const usableHeight = boardHeight - containerPadding * 2;
         
-        // Вычисляем размер сетки на основе количества квадратов
         const totalSquares = squares.length;
-        // Для 8 квадратов: 4x2, для 10: 5x2
         let cols, rows;
         if (totalSquares === 8) {
           cols = 4;
@@ -259,16 +279,13 @@ function renderBoard({ squares, target, size, mod, task }) {
           cols = 5;
           rows = 2;
         } else {
-          // Для других количеств вычисляем оптимальную сетку
           cols = Math.ceil(Math.sqrt(totalSquares));
           rows = Math.ceil(totalSquares / cols);
         }
         
-        // Вычисляем размер каждой ячейки
         const cellWidth = usableWidth / cols;
         const cellHeight = usableHeight / rows;
         
-        // Создаем массив доступных ячеек (если еще не создан)
         if (!boardEl.dataset.cellsInitialized) {
           const availableCells = [];
           for (let row = 0; row < rows; row++) {
@@ -276,7 +293,6 @@ function renderBoard({ squares, target, size, mod, task }) {
               availableCells.push({ row, col });
             }
           }
-          // Перемешиваем ячейки для случайного распределения
           for (let i = availableCells.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]];
@@ -286,25 +302,20 @@ function renderBoard({ squares, target, size, mod, task }) {
           boardEl.dataset.cellIndex = '0';
         }
         
-        // Получаем следующую доступную ячейку
         const availableCells = JSON.parse(boardEl.dataset.availableCells);
         const cellIndex = parseInt(boardEl.dataset.cellIndex) || 0;
         const cell = availableCells[cellIndex];
         boardEl.dataset.cellIndex = (cellIndex + 1).toString();
         
-        // Вычисляем границы ячейки
         const cellLeft = containerPadding + cell.col * cellWidth;
         const cellTop = containerPadding + cell.row * cellHeight;
         const cellRight = cellLeft + cellWidth;
         const cellBottom = cellTop + cellHeight;
         
-        // Генерируем случайные координаты внутри ячейки
-        // Учитываем размер квадрата, чтобы он не выходил за границы ячейки
-        const padding = 5; // Небольшой отступ от краев ячейки
+        const padding = 5;
         const maxX = cellRight - squareSize - padding;
         const maxY = cellBottom - squareSize - padding;
         
-        // Генерируем случайную позицию внутри ячейки
         const randomX = Math.max(cellLeft + padding, Math.min(
           cellLeft + padding + Math.random() * (maxX - cellLeft - padding),
           maxX
@@ -316,7 +327,35 @@ function renderBoard({ squares, target, size, mod, task }) {
         
         btn.style.left = `${randomX}px`;
         btn.style.top = `${randomY}px`;
-      }, 50); // Увеличиваем задержку для гарантии рендеринга
+      }, 50);
+    } else if (task === 'delete' || (mod === 'rotate' && task === 'delete')) {
+      btn.style.position = 'absolute';
+      const squareSize = 140;
+      btn.style.width = `${squareSize}px`;
+      btn.style.height = `${squareSize}px`;
+      btn.style.cursor = 'move';
+      
+      setTimeout(() => {
+        const boardWidth = boardEl.clientWidth || boardEl.offsetWidth || 800;
+        const boardHeight = boardEl.clientHeight || boardEl.offsetHeight || 600;
+        
+        const containerPadding = 8;
+        const usableWidth = boardWidth - containerPadding * 2;
+        const usableHeight = boardHeight - containerPadding * 2;
+        
+        const padding = 5;
+        const maxX = usableWidth - squareSize - padding;
+        const maxY = usableHeight - squareSize - padding;
+        
+        const randomX = containerPadding + padding + Math.random() * Math.max(0, maxX - containerPadding - padding);
+        const randomY = containerPadding + padding + Math.random() * Math.max(0, maxY - containerPadding - padding);
+        
+        btn.style.left = `${randomX}px`;
+        btn.style.top = `${randomY}px`;
+        
+        btn.dataset.initialX = randomX;
+        btn.dataset.initialY = randomY;
+      }, 50);
     }
     
     const grid = document.createElement('div');
@@ -332,12 +371,9 @@ function renderBoard({ squares, target, size, mod, task }) {
 
     btn.appendChild(grid);
     
-    // Обработка в зависимости от типа задачи
     if (task === 'click') {
-      // Уровень 1: простой клик
       btn.addEventListener('click', () => engine.handleAnswer(idx));
     } else if (task === 'drag') {
-      // Уровень 2: drag & drop
       btn.draggable = true;
       btn.classList.add('draggable-square');
       btn.addEventListener('dragstart', (e) => {
@@ -348,31 +384,100 @@ function renderBoard({ squares, target, size, mod, task }) {
       btn.addEventListener('dragend', () => {
         btn.classList.remove('dragging');
       });
-      // При drag&drop клик не используется для проверки
     } else if (task === 'delete') {
-      // Уровень 3: двойной клик для удаления
       let clickTimeout = null;
+      let isDragging = false;
+      let dragStartX = 0;
+      let dragStartY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+      
+      btn.addEventListener('mousedown', (e) => {
+        if (e.detail === 2) return;
+        if (btn.dataset.deleted === 'true') return;
+        
+        isDragging = true;
+        btn.style.zIndex = '1000';
+        btn.style.transition = 'none';
+        
+        const boardRect = boardEl.getBoundingClientRect();
+        dragStartX = e.clientX - boardRect.left;
+        dragStartY = e.clientY - boardRect.top;
+        initialLeft = parseFloat(btn.style.left) || 0;
+        initialTop = parseFloat(btn.style.top) || 0;
+        
+        e.preventDefault();
+      });
+      
+      const handleMouseMove = (e) => {
+        if (!isDragging || btn.dataset.deleted === 'true') return;
+        
+        const boardRect = boardEl.getBoundingClientRect();
+        const mouseX = e.clientX - boardRect.left;
+        const mouseY = e.clientY - boardRect.top;
+        
+        const deltaX = mouseX - dragStartX;
+        const deltaY = mouseY - dragStartY;
+        
+        const squareWidth = btn.offsetWidth;
+        const squareHeight = btn.offsetHeight;
+        const containerPadding = 8;
+        
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+        
+        const minX = containerPadding;
+        const minY = containerPadding;
+        const maxX = boardRect.width - squareWidth - containerPadding;
+        const maxY = boardRect.height - squareHeight - containerPadding;
+        
+        newLeft = Math.max(minX, Math.min(newLeft, maxX));
+        newTop = Math.max(minY, Math.min(newTop, maxY));
+        
+        btn.style.left = `${newLeft}px`;
+        btn.style.top = `${newTop}px`;
+      };
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      
+      const handleMouseUp = () => {
+        if (isDragging) {
+          isDragging = false;
+          btn.style.zIndex = '';
+          btn.style.transition = '';
+        }
+      };
+      
+      document.addEventListener('mouseup', handleMouseUp);
+      
       btn.addEventListener('click', () => {
+        if (isDragging) {
+          clickTimeout = null;
+          return;
+        }
+        
         if (clickTimeout) {
           clearTimeout(clickTimeout);
-          // Двойной клик
           
-          // Проверяем, является ли это правильным квадратом
           if (idx === engine.current.correctIndex) {
-            // Игра завершается с ошибкой
             setTimeout(() => {
               engine.callbacks.onWrongAnswer('Вы удалили нужный квадрат');
             }, 100);
             return;
           }
           
-          // Удаляем неправильный квадрат (скрываем, но не удаляем из DOM, чтобы не смещались остальные)
+          const bbox = btn.getBoundingClientRect();
+          const x = bbox.left + bbox.width / 2;
+          const y = bbox.top + bbox.height / 2;
+          for (let i = 0; i < 30; i++) {
+            createParticle(x, y, 'square');
+          }
+          
           btn.style.opacity = '0';
           btn.style.visibility = 'hidden';
           btn.style.pointerEvents = 'none';
           btn.dataset.deleted = 'true';
           
-          // Проверяем, остался ли только правильный квадрат
           const visibleSquares = currentSquares.filter(sq => sq.dataset.deleted !== 'true');
           if (visibleSquares.length === 1) {
             const remainingSquare = visibleSquares[0];
@@ -392,7 +497,6 @@ function renderBoard({ squares, target, size, mod, task }) {
       });
     }
     
-    // Обработка наведения (hover)
     btn.addEventListener('mouseenter', () => {
       if (!engine.locked) {
         btn.classList.add('hover');
@@ -408,7 +512,6 @@ function renderBoard({ squares, target, size, mod, task }) {
 
   applyModifier(mod, task);
 }
-
 
 function applyModifier(mod, task) {
   activeModifier = mod || 'none';
@@ -429,7 +532,6 @@ function handleQuestionResult(result) {
 
   const { correct, chosen } = result;
   
-  // Визуальная обратная связь без модального окна
   currentSquares.forEach((el, idx) => {
     el.classList.remove('correct', 'wrong');
     if (idx === (engine.current?.correctIndex ?? -1)) {
@@ -498,15 +600,12 @@ hintBtn.addEventListener('click', () => {
 
 finishBtn.addEventListener('click', () => engine.finishGame());
 
-// Обработчики для drag&drop (уровень 2)
 const dragTargetArea = document.getElementById('drag-target-container');
 const droppedSquareWrapper = document.getElementById('dropped-square-wrapper');
 
-// Инициализация обработчиков drag&drop
 function initDragAndDrop() {
   if (!dragTargetArea || !droppedSquareWrapper) return;
   
-  // Удаляем старые обработчики, если они есть, и добавляем новые
   dragTargetArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -520,7 +619,6 @@ function initDragAndDrop() {
     const rect = dragTargetArea.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    // Проверяем, что мы действительно покинули область
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       dragTargetArea.classList.remove('drag-over');
     }
@@ -536,7 +634,6 @@ function initDragAndDrop() {
       droppedSquareRotation = 0;
       currentRotation = 0;
       
-      // Создаем квадрат в контейнере
       droppedSquareWrapper.innerHTML = '';
       const wrapper = document.createElement('div');
       wrapper.className = 'dropped-square';
@@ -564,12 +661,10 @@ function initDragAndDrop() {
   });
 }
 
-// Инициализируем при загрузке
 if (dragTargetArea && droppedSquareWrapper) {
   initDragAndDrop();
 }
 
-// Обработка поворота клавишами
 let currentRotation = 0;
 const rotateDroppedSquare = (direction) => {
   if (!droppedSquareWrapper || !droppedSquareWrapper.firstChild) return;
@@ -582,7 +677,6 @@ const rotateDroppedSquare = (direction) => {
   droppedSquareRotation = currentRotation;
 };
 
-// Обработка клавиш стрелок
 document.addEventListener('keydown', (e) => {
   if (engine.current?.task === 'drag' && droppedSquareWrapper.firstChild) {
     if (e.key === 'ArrowLeft') {
@@ -595,14 +689,12 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Функция проверки перетащенного и повернутого квадрата
 function checkDroppedSquare() {
   if (droppedSquareIndex === null || !engine.current || !droppedSquareWrapper.firstChild) return;
   
   const { target, correctIndex } = engine.current;
   const droppedMatrix = JSON.parse(droppedSquareWrapper.firstChild.dataset.matrix);
   
-  // Поворачиваем матрицу в соответствии с углом поворота
   let rotatedMatrix = droppedMatrix;
   const rotations = Math.floor(droppedSquareRotation / 90) % 4;
   
@@ -610,17 +702,15 @@ function checkDroppedSquare() {
     rotatedMatrix = rotateSquare(rotatedMatrix);
   }
   
-  // Проверяем совпадение с образцом
   const matches = areMatricesEqual(rotatedMatrix, target);
   
   if (matches && droppedSquareIndex === correctIndex) {
     engine.handleAnswer(correctIndex);
   } else {
-    engine.handleAnswer(-1); // Неправильный ответ
+    engine.handleAnswer(-1);
   }
 }
 
-// Вспомогательная функция для сравнения матриц
 function areMatricesEqual(m1, m2) {
   if (m1.length !== m2.length) return false;
   return m1.every((row, i) => 
@@ -628,7 +718,6 @@ function areMatricesEqual(m1, m2) {
   );
 }
 
-// Кнопка для проверки после поворота (создаем один раз)
 let checkBtn = null;
 function ensureCheckButton() {
   if (!checkBtn && dragTargetArea) {
@@ -642,7 +731,6 @@ function ensureCheckButton() {
   }
 }
 
-// Панель разработчика
 const devToggle = document.getElementById('dev-toggle');
 const devPanel = document.getElementById('dev-panel');
 
@@ -671,6 +759,29 @@ document.getElementById('dev-level-3').addEventListener('click', () => {
   devPanel.classList.remove('visible');
 });
 
+document.getElementById('dev-question-1').addEventListener('click', () => {
+  engine.questionIndex = 1;
+  engine.showingInstruction = false;
+  if (instructionModal) instructionModal.classList.add('hidden');
+  engine.askQuestion();
+  devPanel.classList.remove('visible');
+});
+
+document.getElementById('dev-question-3').addEventListener('click', () => {
+  engine.questionIndex = 3;
+  engine.showingInstruction = false;
+  if (instructionModal) instructionModal.classList.add('hidden');
+  engine.askQuestion();
+  devPanel.classList.remove('visible');
+});
+
+document.getElementById('dev-question-5').addEventListener('click', () => {
+  engine.questionIndex = 5;
+  engine.showingInstruction = false;
+  if (instructionModal) instructionModal.classList.add('hidden');
+  engine.askQuestion();
+  devPanel.classList.remove('visible');
+});
 
 document.getElementById('dev-reset').addEventListener('click', () => {
   engine.score = 0;
@@ -681,7 +792,6 @@ document.getElementById('dev-reset').addEventListener('click', () => {
   devPanel.classList.remove('visible');
 });
 
-// Убеждаемся, что DOM загружен перед инициализацией
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     engine.start();
