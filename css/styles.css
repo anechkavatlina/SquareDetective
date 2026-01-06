@@ -76,6 +76,43 @@ a:hover { text-decoration: underline; }
   letter-spacing: 1px;
   margin: 0;
   text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: default;
+}
+
+.title-line {
+  display: block;
+  line-height: 1.2;
+}
+
+.letter-flip {
+  display: inline-block;
+  transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.letter-flip.flipping {
+  animation: flip-salto 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes flip-salto {
+  0% {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  50% {
+    transform: rotateY(180deg) rotateX(180deg) translateY(-20px);
+  }
+  100% {
+    transform: rotateY(360deg) rotateX(360deg);
+  }
+}
+
+.letter-space {
+  display: inline-block;
+  width: 0.3em;
 }
 
 .page--game { 
@@ -255,7 +292,6 @@ a:hover { text-decoration: underline; }
   overflow: hidden;
 }
 
-/* Для панели с игровым полем - разрешаем прокрутку для вращающихся квадратов */
 .game-layout .panel--board {
   overflow-y: auto;
   overflow-x: visible;
@@ -275,7 +311,6 @@ a:hover { text-decoration: underline; }
   min-height: 0;
 }
 
-/* Для панели с игровым полем */
 .panel--board {
   overflow: hidden !important;
   min-height: 0;
@@ -309,7 +344,6 @@ a:hover { text-decoration: underline; }
   width: 100%;
 }
 
-/* Для вращающихся квадратов - контейнер должен показывать все содержимое */
 .board[style*="position: relative"] {
   overflow: visible;
   max-height: none !important;
@@ -317,7 +351,6 @@ a:hover { text-decoration: underline; }
   height: auto;
 }
 
-/* Для вращающихся квадратов - разброс по полю */
 .board:has(.rotating) {
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
   grid-auto-rows: minmax(120px, auto);
@@ -340,20 +373,42 @@ a:hover { text-decoration: underline; }
   aspect-ratio: 1;
 }
 
-/* Для вращающихся квадратов - абсолютное позиционирование */
 .square[style*="position: absolute"] {
   width: auto;
   max-width: none;
 }
 
-/* Для уровня 3 (delete) - квадраты остаются на своих местах при скрытии */
+.square[style*="position: absolute"][style*="cursor: move"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.square[style*="position: absolute"]:active {
+  cursor: grabbing !important;
+  transform: scale(1.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
 .square[data-deleted="true"] {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  /* Сохраняем место в grid, чтобы остальные не смещались */
   min-height: 0;
   min-width: 0;
+}
+
+particle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 10000;
 }
 
 .square.rotating {
@@ -432,8 +487,6 @@ a:hover { text-decoration: underline; }
   overflow: visible !important;
 }
 
-/* Анимации вращения теперь создаются динамически в modifiers.js */
-
 .moving { will-change: transform; transition: transform 1.6s ease-in-out; }
 
 @media (max-width: 1024px) {
@@ -442,7 +495,6 @@ a:hover { text-decoration: underline; }
   .panel--controls .btn { flex: 1 1 45%; }
 }
 
-/* Панель разработчика для быстрого перехода между уровнями */
 .dev-panel {
   position: fixed;
   top: 10px;
@@ -499,7 +551,6 @@ a:hover { text-decoration: underline; }
   background: rgba(123, 109, 255, 0.5);
 }
 
-/* Drag & Drop стили */
 .drag-container {
   display: flex;
   flex-direction: column;
@@ -602,4 +653,3 @@ a:hover { text-decoration: underline; }
     grid-template-columns: 1fr;
   }
 }
-
