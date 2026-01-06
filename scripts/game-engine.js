@@ -1,17 +1,16 @@
 import { DIFFICULTY_CONFIG, GAME_LEVEL_CONFIG, calculateScore, sample } from './game-logic.js';
 import { generateUniqueSquaresSet } from './generator.js';
 
-// Управляет прогрессом уровней игры, таймером и подсчётом очков
 export class GameEngine {
   constructor({ playerName, difficultyLevel, ui, callbacks }) {
     this.playerName = playerName;
-    this.difficultyLevel = difficultyLevel; // Уровень сложности (1-3)
+    this.difficultyLevel = difficultyLevel;
     this.diffConfig = DIFFICULTY_CONFIG[difficultyLevel];
     this.ui = ui;
     this.callbacks = callbacks;
     
-    this.gameLevel = 1; // Текущий уровень игры (1-3)
-    this.questionIndex = 1; // Текущий вопрос в уровне игры
+    this.gameLevel = 1;
+    this.questionIndex = 1;
     this.score = 0;
     this.locked = false;
     this.timerId = null;
@@ -45,7 +44,6 @@ export class GameEngine {
     this.askQuestion();
   }
 
-  // Время уменьшается на 10% за вопрос
   getTimeForCurrentQuestion() {
     const decay = Math.pow(0.9, this.questionIndex - 1);
     return Math.max(8, Math.floor(this.diffConfig.baseTime * decay));
@@ -55,7 +53,6 @@ export class GameEngine {
     const gameConfig = GAME_LEVEL_CONFIG[this.gameLevel];
     
     if (this.questionIndex > gameConfig.questions) {
-      // Завершили текущий уровень игры
       this.finishGameLevel();
       return;
     }
@@ -158,10 +155,7 @@ export class GameEngine {
       this.score += gained;
       this.ui.score.textContent = this.score;
     }
-    // При неправильном ответе или истечении времени игра завершается, 
-    // поэтому штрафы не применяются
 
-    // Показываем результат только визуально (подсветка), без модального окна
     this.callbacks.onQuestionResult({
       correct,
       chosen: index,
@@ -173,7 +167,6 @@ export class GameEngine {
       timeUp
     });
 
-    // Если ответ неверный - завершаем игру
     if (!correct && !timeUp) {
       setTimeout(() => {
         this.callbacks.onWrongAnswer('Неправильно. Попробуй еще раз');
@@ -181,7 +174,6 @@ export class GameEngine {
       return;
     }
 
-    // Если время истекло - завершаем игру
     if (timeUp) {
       setTimeout(() => {
         this.callbacks.onWrongAnswer('Время истекло. Попробуй еще раз');
@@ -189,7 +181,6 @@ export class GameEngine {
       return;
     }
 
-    // Автоматически переходим к следующему вопросу через небольшую задержку
     if (correct) {
       setTimeout(() => {
         this.nextQuestion();
@@ -205,16 +196,12 @@ export class GameEngine {
   finishGameLevel() {
     clearInterval(this.timerId);
     
-    // Проверяем, можно ли перейти на следующий уровень игры
     if (this.gameLevel < 3 && this.score >= 0) {
-      // Переходим на следующий уровень игры
       this.gameLevel += 1;
-      // Показываем инструкцию для следующего уровня
       setTimeout(() => {
         this.showInstruction();
       }, 1000);
     } else {
-      // Завершили все уровни игры или провалили
       this.finishGame();
     }
   }
