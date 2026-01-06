@@ -1,11 +1,9 @@
-// Базовые константы уровней и палитры
 export const COLOR_PALETTES = {
   2: ['#af11e9ff', '#fa9cedff'],
   3: ['#af11e9ff', '#fa9cedff', '#837ffdff'],
   4: ['#af11e9ff', '#fa9cedff', '#837ffdff', '#abcaf8ff']
 };
 
-// Конфигурация уровней сложности (определяет размер квадратов)
 export const DIFFICULTY_CONFIG = {
   1: {
     name: 'Легкий',
@@ -21,26 +19,25 @@ export const DIFFICULTY_CONFIG = {
   },
   3: {
     name: 'Сложный',
-    sizes: [5, 6],
+    sizes: [4, 5],
     baseColors: 4,
     baseTime: 30
   }
 };
 
-// Конфигурация уровней игры (определяет задачи и модификаторы)
 export const GAME_LEVEL_CONFIG = {
   1: {
     name: 'Уровень 1',
     description: 'Задача: кликнуть по нужному квадрату',
-    task: 'click', // Тип задачи: click, drag, delete
+    task: 'click',
     questions: 6,
-    progression: [8, 10, 8, 10, 8, 10], // Количество квадратов для каждого вопроса
-    modifiers: [null, null, 'blink', 'blink', 'rotate', 'rotate'] // Модификаторы для каждого вопроса
+    progression: [8, 10, 8, 10, 8, 10],
+    modifiers: [null, null, 'blink', 'blink', 'rotate', 'rotate']
   },
   2: {
     name: 'Уровень 2',
     description: 'Задача: перетащить квадрат в контейнер под образцом и клавишами лево-право (поворот 90°) повернуть его именно так, как расположен образец',
-    task: 'drag', // Тип задачи: drag & drop с поворотом
+    task: 'drag',
     questions: 6,
     progression: [8, 10, 8, 10, 8, 10],
     modifiers: [null, null, 'blink', 'blink', 'rotate', 'rotate']
@@ -48,17 +45,15 @@ export const GAME_LEVEL_CONFIG = {
   3: {
     name: 'Уровень 3',
     description: 'Задача: двойным кликом удалять ненужные квадраты пока не останется верный',
-    task: 'delete', // Тип задачи: двойной клик для удаления
+    task: 'delete',
     questions: 6,
     progression: [8, 10, 8, 10, 8, 10],
     modifiers: [null, null, 'blink', 'blink', 'rotate', 'rotate']
   }
 };
 
-// Случайный элемент
 export const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// Создание квадрата N x N с colorsCount цветами
 export function generateSquare(size, colorsCount) {
   const palette = COLOR_PALETTES[colorsCount] || COLOR_PALETTES[2];
   return Array.from({ length: size }, () =>
@@ -66,7 +61,6 @@ export function generateSquare(size, colorsCount) {
   );
 }
 
-// Поворот на 90 градусов по часовой
 export function rotateSquare(square) {
   const n = square.length;
   const res = Array.from({ length: n }, () => Array(n).fill(null));
@@ -78,7 +72,6 @@ export function rotateSquare(square) {
   return res;
 }
 
-// Сравнение квадратов с учётом всех поворотов
 export function areSquaresEqual(sq1, sq2) {
   const rotations = [];
   let rotated = sq1;
@@ -91,7 +84,6 @@ export function areSquaresEqual(sq1, sq2) {
   return rotations.some((variant) => same(variant, sq2));
 }
 
-// Подсчёт очков за вопрос
 export function calculateScore(difficultyLevel, gameLevel, questionIndex, squaresCount, timeLeft, modifier) {
   const diffConfig = DIFFICULTY_CONFIG[difficultyLevel];
   const gameConfig = GAME_LEVEL_CONFIG[gameLevel];
@@ -101,7 +93,7 @@ export function calculateScore(difficultyLevel, gameLevel, questionIndex, square
     (difficultyLevel * 150 * levelMultipliers[difficultyLevel]) +
     (squaresCount * 8) +
     (diffConfig.baseColors * 20) +
-    (gameLevel * 50) // Бонус за уровень игры
+    (gameLevel * 50)
   );
 
   const modMult = {
@@ -117,4 +109,3 @@ export function calculateScore(difficultyLevel, gameLevel, questionIndex, square
 
   return { base, speedBonus, modifier: modMult[modifier || 'null'], total };
 }
-
